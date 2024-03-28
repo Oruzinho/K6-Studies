@@ -6,6 +6,7 @@ import {
   randomString,
   randomIntBetween,
 } from "https://jslib.k6.io/k6-utils/1.4.0/index.js";
+import { SharedArray } from "k6/data";
 
 export const options = {
   scenarios: {
@@ -17,6 +18,10 @@ export const options = {
   },
 };
 
+const userCredentials = new SharedArray("User Credentials", () => {
+  return JSON.parse(open("./credentials.json")).credentials;
+});
+
 let token;
 
 const urlK6Api = new Httpx({
@@ -26,14 +31,27 @@ const urlK6Api = new Httpx({
 
 export default function () {
   // Generate user credentials
-  const firstName = `${randomString(5, `aeioubcdfghijpqrstuv`)}`;
-  const lastName = `${randomString(5, `aeioubcdfghijpqrstuv`)}`;
-  const email = `${firstName}_${lastName}@gmail.com`;
-  const username = `${firstName}_${lastName}_${randomString(3, `0123456789`)}`;
-  const password = `${randomString(10)}`;
+  let randomCredential = randomItem(userCredentials);
+
+  // POST - /auth/token/login/
+  let loginBody = {
+    username: `${randomCredential.username}`,
+    password: `${randomCredential.password}`,
+  };
+
+  let res = urlK6Api.post("/auth/token/login/", JSON.stringify(loginBody));
+
+  try {
+    token = JSON.parse(res.body).access;
+  } catch (error) {
+    token = 0;
+  }
+
+  urlK6Api.addHeader("Authorization", `Bearer ${token}`);
+  sleep(randomIntBetween(1, 3));
 
   // GET - /public/crocodiles/
-  let res = urlK6Api.get("/public/crocodiles/");
+  res = urlK6Api.get("/public/crocodiles/");
 
   sleep(randomIntBetween(1, 3));
 
@@ -43,37 +61,6 @@ export default function () {
 
   res = urlK6Api.get(`/public/crocodiles/${randomPublicId}/`);
 
-  sleep(randomIntBetween(1, 3));
-
-  // POST - /user/register/
-  let registerBody = {
-    username: `${username}`,
-    first_name: `${firstName}`,
-    last_name: `${lastName}`,
-    email: `${email}`,
-    password: `${password}`,
-  };
-
-  res = urlK6Api.post("/user/register/", JSON.stringify(registerBody));
-  console.info(`USUÁRIO: ${registerBody.username}`);
-  console.info(`USUÁRIO: ${registerBody.password}`);
-  console.info(res);
-  sleep(randomIntBetween(1, 3));
-
-  // POST - /auth/token/login/
-  let loginBody = {
-    username: `${username}`,
-    password: `${password}`,
-  };
-  res = urlK6Api.post("/auth/token/login/", JSON.stringify(loginBody));
-
-  try {
-    token = JSON.parse(res.body).access;
-  } catch (error) {
-    token = 0;
-  }
-
-  urlK6Api.addHeader("Authorization", `Bearer ${token}`);
   sleep(randomIntBetween(1, 3));
 
   // POST - /my/crocodiles/
