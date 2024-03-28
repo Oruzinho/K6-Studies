@@ -1,4 +1,5 @@
 import { Httpx } from "https://jslib.k6.io/httpx/0.1.0/index.js";
+import { SharedArray } from "k6/data";
 import { sleep } from "k6";
 import {
   randomItem,
@@ -6,7 +7,6 @@ import {
   randomString,
   randomIntBetween,
 } from "https://jslib.k6.io/k6-utils/1.4.0/index.js";
-import { SharedArray } from "k6/data";
 
 export const options = {
   scenarios: {

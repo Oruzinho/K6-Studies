@@ -33,15 +33,19 @@ export default function () {
   const password = `${randomString(10)}`;
 
   // GET - /public/crocodiles/
-  let res = urlK6Api.get("/public/crocodiles/");
+  let res = urlK6Api.get("/public/crocodiles/", null, {
+    tags: { name: "GET - /public/crocodiles/" },
+  });
 
   sleep(randomIntBetween(1, 3));
 
-  // GET - /public/crocodiles/${id}
+  // GET - /public/crocodiles/${randomPublicId}
   let publicCrocodileIds = findBetween(res.body, '"id":', ',"', true);
   let randomPublicId = randomItem(publicCrocodileIds);
 
-  res = urlK6Api.get(`/public/crocodiles/${randomPublicId}/`);
+  res = urlK6Api.get(`/public/crocodiles/${randomPublicId}/`, null, {
+    tags: { name: "GET - /public/crocodiles/${randomPublicId}" },
+  });
 
   sleep(randomIntBetween(1, 3));
 
@@ -54,10 +58,10 @@ export default function () {
     password: `${password}`,
   };
 
-  res = urlK6Api.post("/user/register/", JSON.stringify(registerBody));
-  console.info(`USUÁRIO: ${registerBody.username}`);
-  console.info(`USUÁRIO: ${registerBody.password}`);
-  console.info(res);
+  res = urlK6Api.post("/user/register/", JSON.stringify(registerBody), {
+    tags: { name: "POST - /user/register/" },
+  });
+
   sleep(randomIntBetween(1, 3));
 
   // POST - /auth/token/login/
@@ -65,7 +69,9 @@ export default function () {
     username: `${username}`,
     password: `${password}`,
   };
-  res = urlK6Api.post("/auth/token/login/", JSON.stringify(loginBody));
+  res = urlK6Api.post("/auth/token/login/", JSON.stringify(loginBody), {
+    tags: { name: "POST - /auth/token/login/" },
+  });
 
   try {
     token = JSON.parse(res.body).access;
@@ -83,18 +89,27 @@ export default function () {
       sex: `${randomString(1, `MF`)}`,
       date_of_birth: "2000-01-01",
     };
-    res = urlK6Api.post("/my/crocodiles/", JSON.stringify(crocodileInfo));
+    res = urlK6Api.post("/my/crocodiles/", JSON.stringify(crocodileInfo), {
+      tags: { name: "POST - /my/crocodiles/" },
+    });
+
     sleep(randomIntBetween(1, 2));
   }
 
   // GET - /my/crocodiles/
-  res = urlK6Api.get("/my/crocodiles/");
+  (res = urlK6Api.get("/my/crocodiles/")),
+    null,
+    { tags: { name: "GET - /my/crocodiles/" } };
+
   let privateCrocodileIds = findBetween(res.body, '"id":', ',"', true);
   let randomPrivateId = randomItem(privateCrocodileIds);
 
   sleep(randomIntBetween(1, 3));
+
   // GET - 	/my/crocodiles/{id}/
-  res = urlK6Api.get(`/my/crocodiles/${randomPrivateId}/`);
+  (res = urlK6Api.get(`/my/crocodiles/${randomPrivateId}/`)),
+    null,
+    { tags: { name: "GET - 	/my/crocodiles/{randomPrivateId}/" } };
 
   sleep(randomIntBetween(1, 3));
 
@@ -106,7 +121,8 @@ export default function () {
   };
   res = urlK6Api.put(
     `/my/crocodiles/${randomPrivateId}/`,
-    JSON.stringify(crocodileInfo)
+    JSON.stringify(crocodileInfo),
+    { tags: { name: "PUT - 	/my/crocodiles/{id}/" } }
   );
 
   sleep(randomIntBetween(1, 3));
@@ -115,19 +131,25 @@ export default function () {
   let newCrocodileName = { name: `${randomString(5, `aeioubcdfghijpqrstuv`)}` };
   res = urlK6Api.patch(
     `/my/crocodiles/${randomPrivateId}/`,
-    JSON.stringify(newCrocodileName)
+    JSON.stringify(newCrocodileName),
+    { tags: { name: "PATCH - /my/crocodiles/{randomPrivateId}/" } }
   );
 
   sleep(randomIntBetween(1, 3));
 
   // DELETE - 	/my/crocodiles/{id}/
   for (let i = 0; i < privateCrocodileIds.length; i++) {
-    res = urlK6Api.delete(`/my/crocodiles/${privateCrocodileIds[i]}/`);
+    res = urlK6Api.delete(`/my/crocodiles/${privateCrocodileIds[i]}/`, null, {
+      tags: { name: "DELETE - /my/crocodiles/{privateCrocodileIds}/" },
+    });
 
     sleep(randomIntBetween(1, 3));
   }
 
   // GET - /my/crocodiles/
-  res = urlK6Api.get("/my/crocodiles/");
+  res = urlK6Api.get("/my/crocodiles/", null, {
+    tags: { name: "GET - /my/crocodiles/" },
+  });
+
   sleep(randomIntBetween(1, 3));
 }
